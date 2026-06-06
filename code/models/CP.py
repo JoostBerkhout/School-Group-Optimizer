@@ -39,6 +39,9 @@ def add_objective(model, x, students, teachers, data, variables):
         # improving fairness for students with fewer preferences met first
         weight = 10 ** (max_k - k)
         fairness_terms.append(weight * met_k)
+        # TODO: The sum does not match how it is written down in (13) of the thesis
+        #   I have the feeling you want to have a counter for number of matches of preferences
+        #   and then just give that a weight. So sum_k num_matches[k] * weights[k]
 
     print("Fairness terms (CP):", fairness_terms[:5])
 
@@ -124,6 +127,7 @@ def add_fairness_layers(model, x, students, teachers, preferences):
             model.Add(num_satisfied >= k).OnlyEnforceIf(met_k)
             # If met_k is 0 then less than k preferences should be met
             model.Add(num_satisfied < k).OnlyEnforceIf(met_k.Not())
+            # TODO: Why not just model.Add(num_satisfied == k).OnlyEnforceIf(met_k), or something similar?
             all_layer_vars.append((k, met_k))
 
     return all_layer_vars
@@ -318,8 +322,21 @@ def solve_model(model, x, results_folder, timestamp, timelimit, min_prefs_per_ki
 
     # Set up and attach the logger callback
     logger = ObjectiveLogger(results_folder, timestamp, timelimit, min_prefs_per_kid, deviation)
-    status = solver.SolveWithSolutionCallback(model, logger)
-    logger.EndSearch(solver.StatusName(status))
+
+    # OR-Tools API changed method names in newer versions.
+    if hasattr(solver, "SolveWithSolutionCallback"):
+        status = solver.SolveWithSolutionCallback(model, logger)
+    else:
+        status = solver.solve(model, logger)
+
+    if hasattr(solver, "StatusName"):
+        status_str = solver.StatusName(status)
+    elif hasattr(solver, "status_name"):
+        status_str = solver.status_name(status)
+    else:
+        status_str = str(status)
+
+    logger.EndSearch(status_str)
 
     # Check if a solution was found
     if status in (cp_model.FEASIBLE, cp_model.OPTIMAL):
@@ -334,7 +351,7 @@ def format_solution(solution):
 
 def run_cp(school, processed_data_folder, timelimit, min_prefs_start, deviation):
     folder = 'data/results'
-    timestamp = datetime.now().strftime("%d-%m_%H:%M")
+    timestamp = datetime.now().strftime("%d-%m_%H_%M")
     results_folder = os.path.join(folder, school, "CP")
 
     # 1. Try decreasing min_prefs from 5 to 0 with normal deviation

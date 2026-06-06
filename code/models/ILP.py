@@ -355,7 +355,7 @@ def format_solution(model, x):
 
 def run_ilp(school, processed_data_folder, timelimit, min_prefs_start, deviation):
     folder = 'data/results'
-    timestamp = datetime.now().strftime("%d-%m_%H:%M")
+    timestamp = datetime.now().strftime("%d-%m_%H_%M")
     results_folder = os.path.join(folder, school, "ILP")
 
     # 1. Try decreasing min_prefs from 5 to 0 with normal deviation

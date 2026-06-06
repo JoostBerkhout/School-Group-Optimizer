@@ -51,7 +51,7 @@ if __name__ == "__main__":
     run_baseline_ilp = method == "ILP"
     run_cp_model = method == "CP"
 
-    # Set time limit for the solver (default 10 minutes)
+    # Set time limit for the solver (default 30 minutes)
     timelimit = 30 * 60
     if len(sys.argv) > 3 and sys.argv[3] != "-":
         timelimit = int(sys.argv[3])
@@ -68,5 +68,3 @@ if __name__ == "__main__":
     # Run pipeline
     print(f"school {school}, method {method}")
     run_pipeline()
-
-

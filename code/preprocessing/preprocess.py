@@ -22,7 +22,7 @@ def read_data(excel_path):
     start_table_3 = group_preferences[group_preferences.iloc[:, 0] == 'Naam Leerling'].index[0] + 2
 
     # Find the end indices for each table based on the next table's start
-    end_table_1 = start_table_2  - 2
+    end_table_1 = start_table_2 - 2
     end_table_2 = start_table_3 - 2
     end_table_3 = len(group_preferences) + 1
 
@@ -47,7 +47,8 @@ def translate_dfs(info_teachers, info_students, group_preferences, constraints_s
     constraints_teachers.columns = ['Student', 'Teacher', 'Together']
     current_groups.columns = ['Student', 'Teacher']
 
-    # Only translate Behavior column if it exists
+    # Only translate Behavior column if it exists: I think here it allows for
+    # different formats of the template data with extra care columns
     info_columns = ['Student', 'Grade', 'Gender', 'Extra Care', 'Preference 1', 'Preference 2', 'Preference 3', 'Preference 4', 'Preference 5']
     if info_students.shape[1] == 10:
         info_columns.insert(4, 'Behavior')
@@ -137,7 +138,6 @@ def preprocess(school, raw_data_folder, processed_data_folder):
         exit("Grouping data for {} is invalid. Please check the errors above.".format(school))
     else:
         print("Grouping data for {} is valid.".format(school))
-
 
     # Save the processed data
     save_dataframes_to_csv(school, data, processed_data_folder)
