@@ -1,3 +1,22 @@
+# Getting Started (uv)
+
+Assuming `uv` is already installed:
+
+1. Open a terminal in the project root (`School-Group-Optimizer`).
+2. Sync the environment and dependencies:
+
+```bash
+uv sync
+```
+
+3. Run the pipeline (example):
+
+```bash
+uv run python main.py <school> <method: cp|ilp> [timelimit] [min_prefs_per_kid] [deviation]
+```
+
+Use the sections below for preprocessing and evaluation details.
+
 ## Instructions
 ### Adding excel data
 1. Add a folder with the name of the school to the `data/raw_data` folder
@@ -30,4 +49,3 @@ Evaluation is run directly after running the optimization models. They can be ru
 4. Run `python3 code/evaluation/evaluate_results.py <method: cp|ilp >` to evaluate the results
    - `<method>`: The optimization method to evaluate (e.g. `cp`, `ilp`)
 5. Results will be saved in `data/results/<school>/<method>`
-
