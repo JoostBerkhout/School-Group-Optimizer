@@ -11,7 +11,7 @@ def create_initial_model(students, teachers, data, variables):
     model = cp_model.CpModel()
 
     # Decision variables
-    # x[s][t] = 1 if student s assigned to teacher t
+    # x[s, t] = 1 if student s assigned to teacher t, 0 else
     x = {}
     for s in students:
         for t in teachers:
@@ -156,31 +156,33 @@ def add_balance_constraints(model, attribute, deviation, x, teachers, data):
     return model
 
 def add_fairness_constraints(model, x, students, teachers, preferences, min_prefs_per_kid):
+    if min_prefs_per_kid == 0:
+        return model
+
     for s1 in students:
-        # Only add constraints if the minimum preference is set greater than 0
-        if min_prefs_per_kid > 0:
-            preferred_students = [s2 for s2 in students if s1 != s2 and preferences.loc[s1, s2] == 1]
+        preferred_students = [s2 for s2 in students if s1 != s2 and preferences.loc[s1, s2] == 1]
 
-            # Continue if s1 has any preferred students
-            if preferred_students:
-                together_vars = []
+        if not preferred_students:
+            continue  # Skip if no preferred students
 
-                for s2 in preferred_students:
-                    # Create var that is 1 if both students are assigned to the same teacher
-                    both_assigned = model.NewBoolVar(f"satisfied_{s1}_{s2}")
-                    both_assigned_per_teacher = [model.NewBoolVar(f"{s1}_{s2}_with_{t}") for t in teachers]
-                    for i, t in enumerate(teachers):
-                        # Check if both students are assigned to a teacher
-                        model.AddBoolAnd([x[s1, t], x[s2, t]]).OnlyEnforceIf(both_assigned_per_teacher[i])
-                        model.AddBoolOr([x[s1, t].Not(), x[s2, t].Not()]).OnlyEnforceIf(both_assigned_per_teacher[i].Not())
+        together_vars = []
 
-                    # Var is only 1 if at least one of the together_per_teacher vars is 1
-                    model.AddBoolOr(both_assigned_per_teacher).OnlyEnforceIf(both_assigned)
-                    model.AddBoolAnd([v.Not() for v in both_assigned_per_teacher]).OnlyEnforceIf(both_assigned.Not())
-                    together_vars.append(both_assigned)
+        for s2 in preferred_students:
+            # Create var that is 1 if both students are assigned to the same teacher
+            both_assigned = model.NewBoolVar(f"satisfied_{s1}_{s2}")
+            both_assigned_per_teacher = [model.NewBoolVar(f"{s1}_{s2}_with_{t}") for t in teachers]
+            for i, t in enumerate(teachers):
+                # Check if both students are assigned to a teacher
+                model.AddBoolAnd([x[s1, t], x[s2, t]]).OnlyEnforceIf(both_assigned_per_teacher[i])
+                model.AddBoolOr([x[s1, t].Not(), x[s2, t].Not()]).OnlyEnforceIf(both_assigned_per_teacher[i].Not())
 
-                # Require that the sum of 'together' variables is at least min_prefs_per_kid for student s1
-                model.Add(sum(together_vars) >= min_prefs_per_kid)
+            # Var is only 1 if at least one of the together_per_teacher vars is 1
+            model.AddBoolOr(both_assigned_per_teacher).OnlyEnforceIf(both_assigned)
+            model.AddBoolAnd([v.Not() for v in both_assigned_per_teacher]).OnlyEnforceIf(both_assigned.Not())
+            together_vars.append(both_assigned)
+
+        # Require that the sum of 'together' variables is at least min_prefs_per_kid for student s1
+        model.Add(sum(together_vars) >= min_prefs_per_kid)
 
     return model
 
