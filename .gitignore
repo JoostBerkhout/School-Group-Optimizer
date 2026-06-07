@@ -12,3 +12,9 @@ final_results/*
 
 # Mean file
 mean.py
+
+# Everything from the idea
+.idea/*
+
+# UV
+uv.lock
