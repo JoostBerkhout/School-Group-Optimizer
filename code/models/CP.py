@@ -320,7 +320,7 @@ def solve_model(model, x, results_folder, timestamp, timelimit, min_prefs_per_ki
 
     # Set seed to ensure reproducibility and enable single-threaded search
     solver.parameters.random_seed = 42
-    solver.parameters.num_search_workers = 1
+    solver.parameters.num_search_workers = 16
 
     # Set up and attach the logger callback
     logger = ObjectiveLogger(results_folder, timestamp, timelimit, min_prefs_per_kid, deviation)
